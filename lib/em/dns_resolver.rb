@@ -18,18 +18,23 @@ module EventMachine
       @socket
     end
 
-    def self.nameserver=(ns)
-      @nameserver = ns
+    def self.nameservers=(ns)
+      @nameservers = ns
     end
-    def self.nameserver
-      unless defined?(@nameserver)
+    def self.nameservers
+      unless defined?(@nameservers)
+        @nameservers = []
         IO::readlines('/etc/resolv.conf').each do |line|
           if line =~ /^nameserver (.+)$/
-            @nameserver = $1.split(/\s+/).first
+            @nameservers << $1.split(/\s+/).first
           end
         end
       end
-      @nameserver
+      @nameservers
+    end
+    def self.nameserver
+      ns = nameservers
+      ns[rand(ns.size)]
     end
 
     ##
@@ -67,7 +72,7 @@ module EventMachine
         @nameserver = ns
       end
       def nameserver
-        @nameserver ||= DnsResolver.nameserver
+        @nameserver || DnsResolver.nameserver
       end
       # Decodes the packet, looks for the request and passes the
       # response over to the requester
